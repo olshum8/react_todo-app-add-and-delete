@@ -1,26 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Todo } from '../../types/Todo';
 import { USER_ID } from '../../api/todos';
 
 interface Props {
   todos: Todo[];
   onAddTodo: (todo: Todo) => Promise<void>;
-  handleError: (error: string) => void;
+  errorMessage: (error: string) => void;
   onTempTodo: (todo: Todo | null) => void;
+  focusInput: () => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  isErrorHidden: (boolean: boolean) => void;
 }
 
 export const TodoForm: React.FC<Props> = ({
   todos,
   onAddTodo,
-  handleError,
+  errorMessage,
   onTempTodo,
+  focusInput,
+  inputRef,
+  isErrorHidden,
 }) => {
   const [todo, setTodo] = useState('');
   const [disableInput, setDisableInput] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleInput = (evnt: React.ChangeEvent<HTMLInputElement>) => {
-    handleError('');
+    isErrorHidden(true);
     setTodo(evnt.target.value);
     setDisableInput(false);
 
@@ -36,7 +41,8 @@ export const TodoForm: React.FC<Props> = ({
     setDisableInput(true);
 
     if (!todo.trim()) {
-      handleError('Title should not be empty');
+      isErrorHidden(false);
+      errorMessage('Title should not be empty');
       setDisableInput(false);
 
       return;
@@ -56,10 +62,12 @@ export const TodoForm: React.FC<Props> = ({
       setDisableInput(false);
       resetForm();
       onTempTodo(null);
+      focusInput();
     } catch (error) {
       setDisableInput(false);
       onTempTodo(null);
-      handleError('Unable to add a todo');
+      isErrorHidden(false);
+      errorMessage('Unable to add a todo');
     }
   };
 

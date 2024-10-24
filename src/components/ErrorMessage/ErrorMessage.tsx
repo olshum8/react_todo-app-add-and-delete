@@ -1,15 +1,22 @@
 import classNames from 'classnames';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface Props {
   errorMessage: string;
+  isHidden: boolean;
+  setIsHidden: (boolean: boolean) => void;
+  setErrorMessage: (string: string) => void;
 }
 
-export const ErrorMessage: React.FC<Props> = ({ errorMessage }) => {
-  const [isHidden, setIsHidden] = useState(true);
-
+export const ErrorMessage: React.FC<Props> = ({
+  errorMessage,
+  isHidden,
+  setIsHidden,
+  setErrorMessage,
+}) => {
   const handleClose = () => {
     setIsHidden(true);
+    setErrorMessage('');
   };
 
   useEffect(() => {
@@ -22,7 +29,7 @@ export const ErrorMessage: React.FC<Props> = ({ errorMessage }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [errorMessage]);
+  }, [errorMessage, isHidden]);
 
   return (
     <div
@@ -42,13 +49,3 @@ export const ErrorMessage: React.FC<Props> = ({ errorMessage }) => {
     </div>
   );
 };
-
-// Unable to load todos
-// <br />
-// Title should not be empty
-// <br />
-// Unable to add a todo
-// <br />
-// Unable to delete a todo
-// <br />
-// Unable to update a todo

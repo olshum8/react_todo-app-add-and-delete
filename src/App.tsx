@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import * as postService from './api/todos';
 import { TodoList } from './components/TodoList/TodoList';
@@ -17,31 +17,50 @@ const FILTER = {
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState('');
+  const [deletingIdList, setDeletingIdList] = useState<number[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [tempTodo, setTempTodo] = useState<Todo | null>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isErrorHiden, setIsErrorHiden] = useState(true);
+
+  const focusInput = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   const addTodo = async (todo: Todo): Promise<void> => {
     try {
       await postService
         .addTodos(todo)
         .then(newTodo => setTodos([...todos, newTodo]));
+      setIsErrorHiden(true);
     } catch (error) {
+      setIsErrorHiden(false);
       setErrorMessage('Unable to add a todo');
       throw error;
     }
   };
 
   const deleteTodo = async (todoId: number) => {
+    setDeletingIdList([...deletingIdList, todoId]);
     try {
       await postService.deleteTodo(todoId);
       setTodos(currentTodo => currentTodo.filter(todo => todo.id !== todoId));
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     } catch (error) {
       setErrorMessage('Unable to delete a todo');
       throw error;
+    } finally {
+      focusInput();
+      setDeletingIdList([]);
     }
   };
 
   const bulkDeleteTodo = async (todoList: Todo[]) => {
+    setDeletingIdList(todoList.map(todo => todo.id));
     try {
       await Promise.all(todoList.map(todo => postService.deleteTodo(todo.id)));
       setTodos(currentTodos =>
@@ -50,6 +69,9 @@ export const App: React.FC = () => {
     } catch (error) {
       setErrorMessage('Unable to delete a todo');
       throw error;
+    } finally {
+      focusInput();
+      setDeletingIdList([]);
     }
   };
 
@@ -86,10 +108,13 @@ export const App: React.FC = () => {
       <div className="todoapp__content">
         <header className="todoapp__header">
           <TodoForm
+            inputRef={inputRef}
+            focusInput={focusInput}
             todos={filteredTodos}
             onAddTodo={addTodo}
-            handleError={setErrorMessage}
             onTempTodo={setTempTodo}
+            errorMessage={setErrorMessage}
+            isErrorHidden={setIsErrorHiden}
           />
         </header>
 
@@ -98,6 +123,7 @@ export const App: React.FC = () => {
             todos={filteredTodos}
             onDelete={deleteTodo}
             tempTodo={tempTodo ? tempTodo : undefined}
+            deleting={deletingIdList}
           />
         </section>
 
@@ -110,7 +136,12 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      <ErrorMessage errorMessage={errorMessage} />
+      <ErrorMessage
+        errorMessage={errorMessage}
+        isHidden={isErrorHiden}
+        setIsHidden={setIsErrorHiden}
+        setErrorMessage={setErrorMessage}
+      />
     </div>
   );
 };

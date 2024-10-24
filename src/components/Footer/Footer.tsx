@@ -65,16 +65,15 @@ export const Footer: React.FC<Props> = ({ onFilter, onDelete, todos }) => {
         </a>
       </nav>
 
-      {completedTodos.length > 0 && (
-        <button
-          type="button"
-          className="todoapp__clear-completed"
-          data-cy="ClearCompletedButton"
-          onClick={() => onDelete(completedTodos)}
-        >
-          Clear completed
-        </button>
-      )}
+      <button
+        disabled={!completedTodos.length > 0}
+        type="button"
+        className="todoapp__clear-completed"
+        data-cy="ClearCompletedButton"
+        onClick={() => onDelete(completedTodos)}
+      >
+        Clear completed
+      </button>
     </footer>
   );
 };
